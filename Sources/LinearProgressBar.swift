@@ -105,16 +105,18 @@ open class LinearProgressBar: UIView {
     // MARK: - Update helpers
 
     private func updateLineLayers() {
-        frame = CGRect(x: frame.minX, y: frame.minY,
-                       width: bounds.width, height: progressBarWidth)
-
+        // Do NOT mutate `frame` here. Changing frame during layoutSubviews fights
+        // Auto Layout (IB height vs progressBarWidth) and causes an infinite
+        // layout loop / UI freeze when the bar becomes visible.
         let linePath = UIBezierPath()
         linePath.move(to: CGPoint(x: 0, y: bounds.midY))
-        linePath.addLine(to: CGPoint(x: bounds.width, y: bounds.midY))
+        linePath.addLine(to: CGPoint(x: max(bounds.width, 0), y: bounds.midY))
 
+        let strokeWidth = bounds.height > 0 ? min(progressBarWidth, bounds.height) : progressBarWidth
         progressComponents.forEach {
-            $0.path  = linePath.cgPath
+            $0.path = linePath.cgPath
             $0.frame = bounds
+            $0.lineWidth = strokeWidth
         }
     }
 
